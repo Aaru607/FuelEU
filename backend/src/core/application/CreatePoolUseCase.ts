@@ -1,6 +1,13 @@
 import { IPoolRepository } from '../ports';
 import { Pool } from '../domain';
 
+// Pool member with allocated compliance balance
+interface PoolMember {
+  recordId: string;
+  complianceBalance: number;
+  initialState: 'deficit' | 'surplus' | 'compliant'; // initial classification
+}
+
 /**
  * Application Use Case: CreatePool
  * 
@@ -17,15 +24,6 @@ export class CreatePoolUseCase {
   constructor(private poolRepository: IPoolRepository) {}
 
   /**
-   * Pool member input with calculated compliance balance.
-   */
-  private interface PoolMember {
-    recordId: string;
-    complianceBalance: number;
-    initialState: 'deficit' | 'surplus' | 'compliant'; // initial classification
-  }
-
-  /**
    * Execute the use case.
    * @param input - { poolId, poolName, members }
    *   where members[].complianceBalance is pre-calculated
@@ -38,7 +36,7 @@ export class CreatePoolUseCase {
       recordId: string;
       complianceBalance: number;
     }>;
-  }): Promise<{ success: boolean; message: string; allocation?: any[] }> {
+  }): Promise<{ success: boolean; message: string; allocation?: PoolMember[] }> {
     const { poolId, poolName, members } = input;
 
     if (members.length === 0) {
@@ -49,7 +47,7 @@ export class CreatePoolUseCase {
     }
 
     // Calculate aggregate compliance balance
-    const totalCB = members.reduce((sum, m) => sum + m.complianceBalance, 0);
+    const totalCB = members.reduce((sum: number, m) => sum + m.complianceBalance, 0);
 
     // Validation 1: Sum of CBs must be >= 0
     if (totalCB < 0) {

@@ -20,12 +20,17 @@ export function useRoutes(apiClient: HttpApiClient) {
         setLoading(true);
         setError(null);
         const data = await apiClient.getRoutes();
+        // eslint-disable-next-line no-console
+        console.log('[useRoutes] Routes fetched from API:', data);
         if (isMounted) {
           setRoutes(data);
         }
       } catch (err) {
         if (isMounted) {
-          setError(err instanceof Error ? err.message : 'Failed to fetch routes');
+          const errorMsg = err instanceof Error ? err.message : 'Failed to fetch routes';
+          // eslint-disable-next-line no-console
+          console.error('[useRoutes] Error fetching routes:', errorMsg);
+          setError(errorMsg);
         }
       } finally {
         if (isMounted) {
@@ -39,7 +44,7 @@ export function useRoutes(apiClient: HttpApiClient) {
     return () => {
       isMounted = false;
     };
-  }, [apiClient]);
+  }, []);
 
   const refetch = async () => {
     try {

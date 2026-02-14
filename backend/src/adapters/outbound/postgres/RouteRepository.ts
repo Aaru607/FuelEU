@@ -6,7 +6,8 @@ interface RouteRow {
   id: string;
   origin: string;
   destination: string;
-  distanceKm?: number;
+  distance_km?: number;
+  actual_intensity?: number;
 }
 
 /**
@@ -14,31 +15,71 @@ interface RouteRow {
  */
 export class RouteRepository implements IRouteRepository {
   async getAllRoutes(): Promise<Route[]> {
+    // Join with ship_compliance to get the latest actual_intensity
     const result = await query<RouteRow>(
-      'SELECT id, origin, destination, distance_km as "distanceKm" FROM routes ORDER BY id'
+      `SELECT
+        r.id,
+        r.origin,
+        r.destination,
+        r.distance_km,
+        sc.actual_intensity
+      FROM routes r
+      LEFT JOIN ship_compliance sc ON r.id = sc.route_id AND sc.period = '2025'
+      ORDER BY r.id`
     );
-    return result.rows.map((row: RouteRow): Route => ({
-      id: row.id,
-      origin: row.origin,
-      destination: row.destination,
-      distanceKm: row.distanceKm,
-    }));
+    
+    return result.rows.map((row: RouteRow): Route => {
+      // Parse numeric fields from PostgreSQL (pg driver returns NUMERIC as strings)
+      const distanceKm = row.distance_km ? parseFloat(String(row.distance_km)) : undefined;
+      const actualIntensity = row.actual_intensity ? parseFloat(String(row.actual_intensity)) : undefined;
+      
+      // eslint-disable-next-line no-console
+      console.log(`[RouteRepository] Mapped row ${row.id}:`, { distanceKm, actualIntensity });
+      
+      return {
+        id: row.id,
+        origin: row.origin,
+        destination: row.destination,
+        distanceKm,
+        actualIntensity: actualIntensity && actualIntensity > 0 ? actualIntensity : undefined,
+      };
+    });
   }
 
   async getRouteById(id: string): Promise<Route | null> {
     const result = await query<RouteRow>(
-      'SELECT id, origin, destination, distance_km as "distanceKm" FROM routes WHERE id = $1',
+      `SELECT
+        r.id,
+        r.origin,
+        r.destination,
+        r.distance_km,
+        sc.actual_intensity
+      FROM routes r
+      LEFT JOIN ship_compliance sc ON r.id = sc.route_id AND sc.period = '2025'
+      WHERE r.id = $1
+      LIMIT 1`,
       [id]
     );
+    
     if (result.rows.length === 0) {
       return null;
     }
+    
     const row = result.rows[0];
+    
+    // Parse numeric fields from PostgreSQL (pg driver returns NUMERIC as strings)
+    const distanceKm = row.distance_km ? parseFloat(String(row.distance_km)) : undefined;
+    const actualIntensity = row.actual_intensity ? parseFloat(String(row.actual_intensity)) : undefined;
+    
+    // eslint-disable-next-line no-console
+    console.log(`[RouteRepository] GetById ${id}:`, { distanceKm, actualIntensity });
+    
     return {
       id: row.id,
       origin: row.origin,
       destination: row.destination,
-      distanceKm: row.distanceKm,
+      distanceKm,
+      actualIntensity: actualIntensity && actualIntensity > 0 ? actualIntensity : undefined,
     };
   }
 

@@ -25,9 +25,11 @@ export function PoolingTab({
   const [formData, setFormData] = useState<{
     routeIds: string[];
     name: string;
+    period: string;
   }>({
     routeIds: [],
     name: '',
+    period: '2025', // Default to 2025 compliance period
   });
 
   const [inputRouteId, setInputRouteId] = useState('');
@@ -66,7 +68,8 @@ export function PoolingTab({
     const payload: CreatePoolPayload = {
       poolId: `pool-${Date.now()}`,
       poolName: formData.name || `Pool ${Date.now()}`,
-      members: formData.routeIds.map((id) => ({ recordId: id, complianceBalance: 0 })),
+      routeIds: formData.routeIds,
+      period: formData.period,
     };
 
     await onCreatePool(payload);
@@ -91,9 +94,32 @@ export function PoolingTab({
             value={formData.name}
             onChange={handleNameChange}
             placeholder="e.g., Nordic Routes Pool 2025"
-            className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 text-slate-700"
+            className="w-full px-4 py-2 border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200"
             disabled={loading}
           />
+        </div>
+
+        {/* Compliance Period */}
+        <div>
+          <label className="block text-sm font-semibold text-slate-700 mb-2">
+            Compliance Period
+          </label>
+          <input
+            type="text"
+            value={formData.period}
+            onChange={(e) =>
+              setFormData((prev) => ({
+                ...prev,
+                period: e.target.value,
+              }))
+            }
+            placeholder="e.g., 2025"
+            className="w-full px-4 py-2 border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200"
+            disabled={loading}
+          />
+          <p className="text-xs text-slate-500 mt-1">
+            Pool members must have compliance records for this period
+          </p>
         </div>
 
         {/* Route ID Input */}
@@ -113,14 +139,14 @@ export function PoolingTab({
                 }
               }}
               placeholder="Enter route ID and press Enter"
-              className="flex-1 px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 text-slate-700"
+              className="flex-1 px-4 py-2 border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800"
               disabled={loading}
             />
             <button
               type="button"
               onClick={handleAddRoute}
               disabled={loading || !inputRouteId.trim()}
-              className="px-4 py-2 bg-slate-300 hover:bg-slate-400 text-slate-700 font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-4 py-2 bg-slate-300 hover:bg-slate-400 text-slate-700 font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed dark:bg-slate-700 dark:hover:bg-slate-600"
             >
               Add
             </button>
@@ -217,36 +243,38 @@ export function PoolingTab({
 
           {/* Member Allocations */}
           <div className="space-y-3">
-            {allocation.map((alloc, idx) => (
+            {allocation?.map?.((alloc, idx) => (
               <div
                 key={idx}
-                className="p-4 bg-white border border-slate-200 rounded-lg"
+                className="p-4 bg-white border border-slate-200 rounded-lg dark:bg-zinc-900 dark:border-zinc-800"
               >
-                <p className="font-semibold text-slate-700 mb-3">{alloc.routeId}</p>
+                <p className="font-semibold text-slate-700 dark:text-zinc-50 mb-3">
+                  {alloc?.routeId || 'Unknown Route'}
+                </p>
                 <div className="grid grid-cols-3 gap-4">
                   <div>
-                    <p className="text-xs text-slate-500 uppercase font-semibold">
+                    <p className="text-xs text-slate-500 dark:text-slate-400 uppercase font-semibold">
                       Before
                     </p>
-                    <p className="text-lg font-bold text-slate-700 mt-1">
-                      {alloc.beforeComplianceBalance.toFixed(2)}
+                    <p className="text-lg font-bold text-slate-700 dark:text-zinc-50 mt-1">
+                      {(alloc?.beforeComplianceBalance ?? 0).toFixed(2)}
                     </p>
                   </div>
                   <div className="flex items-center justify-center">
                     <span className="text-slate-400">→</span>
                   </div>
                   <div>
-                    <p className="text-xs text-slate-500 uppercase font-semibold">
+                    <p className="text-xs text-slate-500 dark:text-slate-400 uppercase font-semibold">
                       After
                     </p>
                     <p
                       className={`text-lg font-bold mt-1 ${
-                        alloc.afterComplianceBalance >= 0
+                        (alloc?.afterComplianceBalance ?? 0) >= 0
                           ? 'text-emerald-600'
                           : 'text-red-600'
                       }`}
                     >
-                      {alloc.afterComplianceBalance.toFixed(2)}
+                      {(alloc?.afterComplianceBalance ?? 0).toFixed(2)}
                     </p>
                   </div>
                 </div>

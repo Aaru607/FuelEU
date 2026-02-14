@@ -14,6 +14,7 @@ describe('BankSurplusUseCase', () => {
     mockComplianceRepository = {
       saveComplianceBalance: jest.fn(),
       getComplianceBalance: jest.fn(),
+      getComplianceRecord: jest.fn(),
     };
     useCase = new BankSurplusUseCase(
       mockBankRepository,

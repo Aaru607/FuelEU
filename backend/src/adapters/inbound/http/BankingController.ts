@@ -56,7 +56,13 @@ export class BankingController {
       });
 
       const statusCode = result.success ? 200 : 400;
-      return res.status(statusCode).json(result);
+      return res.status(statusCode).json({
+        success: result.success,
+        message: result.message,
+        energyInScope: result.energyInScope,
+        amountBanked: result.amountBanked,
+        complianceBalance: result.complianceBalance,
+      });
     } catch (error) {
       const message =
         error instanceof Error ? error.message : 'Internal server error';

@@ -2,7 +2,8 @@ import { IComplianceRepository } from '../../../core/ports';
 import { query } from '../../../infrastructure/db/db';
 
 interface ComplianceRow {
-  balance: number;
+  actual_intensity?: number;
+  fuel_consumption?: number;
 }
 
 /**
@@ -31,9 +32,36 @@ export class ComplianceRepository implements IComplianceRepository {
     period: string
   ): Promise<number | null> {
     const result = await query<ComplianceRow>(
-      'SELECT actual_intensity as balance FROM ship_compliance WHERE route_id = $1 AND period = $2',
+      'SELECT actual_intensity FROM ship_compliance WHERE route_id = $1 AND period = $2',
       [routeId, period]
     );
-    return result.rows.length > 0 ? result.rows[0].balance : null;
+    if (result.rows.length > 0 && result.rows[0].actual_intensity) {
+      // Parse numeric field from PostgreSQL (pg driver returns NUMERIC as strings)
+      return parseFloat(String(result.rows[0].actual_intensity));
+    }
+    return null;
+  }
+
+  async getComplianceRecord(
+    routeId: string,
+    period: string
+  ): Promise<{ fuelConsumption: number; actualIntensity: number } | null> {
+    const result = await query<ComplianceRow>(
+      `SELECT fuel_consumption, actual_intensity 
+       FROM ship_compliance 
+       WHERE route_id = $1 AND period = $2
+       LIMIT 1`,
+      [routeId, period]
+    );
+
+    if (result.rows.length === 0 || !result.rows[0].fuel_consumption || !result.rows[0].actual_intensity) {
+      return null;
+    }
+
+    const row = result.rows[0];
+    return {
+      fuelConsumption: parseFloat(String(row.fuel_consumption)),
+      actualIntensity: parseFloat(String(row.actual_intensity)),
+    };
   }
 }

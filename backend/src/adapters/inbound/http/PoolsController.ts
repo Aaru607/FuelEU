@@ -5,6 +5,9 @@ import { PoolRepository } from '../../outbound/postgres';
 /**
  * Inbound HTTP Adapter: Pools Controller
  * Handles POST and GET requests for pool operations.
+ * 
+ * CRITICAL: Backend is the source of truth. The use case will query the database
+ * directly using raw SQL to fetch REAL compliance data, ignoring any client-provided values.
  */
 export class PoolsController {
   private createPoolUseCase: CreatePoolUseCase;
@@ -17,29 +20,36 @@ export class PoolsController {
 
   async createPool(req: Request, res: Response): Promise<Response> {
     try {
-      const { poolId, poolName, members } = req.body as {
+      const { poolId, poolName, routeIds, period } = req.body as {
         poolId?: string;
         poolName?: string;
-        members?: Array<{
-          recordId: string;
-          complianceBalance: number;
-        }>;
+        routeIds?: string[];
+        period?: string;
       };
 
-      if (!poolId || !poolName || !Array.isArray(members)) {
+      if (!poolId || !poolName || !Array.isArray(routeIds) || routeIds.length === 0 || !period) {
         return res.status(400).json({
-          error: 'Missing required fields: poolId, poolName, members (array)',
+          error: 'Missing required fields: poolId, poolName, routeIds (non-empty array), period',
         });
       }
 
       const result = await this.createPoolUseCase.execute({
         poolId,
         poolName,
-        members,
+        routeIds,
+        period,
       });
 
       const statusCode = result.success ? 200 : 400;
-      return res.status(statusCode).json(result);
+      return res.status(statusCode).json({
+        success: result.success,
+        message: result.message,
+        allocation: result.allocation?.map((alloc) => ({
+          routeId: alloc.recordId,
+          beforeComplianceBalance: alloc.beforeComplianceBalance,
+          afterComplianceBalance: alloc.afterComplianceBalance,
+        })),
+      });
     } catch (error) {
       const message =
         error instanceof Error ? error.message : 'Internal server error';

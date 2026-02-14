@@ -33,17 +33,25 @@ export function BankingTab({
     period: '2025',
   });
 
-  const handleChange = (
+const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]:
-        name === 'period'
-          ? value
-          : Math.max(0, parseFloat(value) || 0),
-    }));
+    
+    // Treat routeId and period as strings, don't parse them!
+    if (name === 'routeId' || name === 'period') {
+      setFormData((prev) => ({
+        ...prev,
+        [name]: value,
+      }));
+    } else {
+      // Treat everything else (fuel, intensity, amount) as numbers
+      const numValue = value === '' ? 0 : parseFloat(value);
+      setFormData((prev) => ({
+        ...prev,
+        [name]: isNaN(numValue) ? 0 : Math.max(0, numValue),
+      }));
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -68,7 +76,7 @@ export function BankingTab({
             value={formData.routeId}
             onChange={handleChange}
             placeholder="e.g., route-001"
-            className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 text-slate-700"
+            className="w-full px-4 py-2 border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200"
             disabled={loading}
           />
         </div>
@@ -85,7 +93,7 @@ export function BankingTab({
             onChange={handleChange}
             min="0"
             step="0.01"
-            className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 text-slate-700"
+            className="w-full px-4 py-2 border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200"
             disabled={loading}
           />
         </div>
@@ -102,7 +110,7 @@ export function BankingTab({
             onChange={handleChange}
             min="0"
             step="0.01"
-            className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 text-slate-700"
+            className="w-full px-4 py-2 border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200"
             disabled={loading}
           />
         </div>
@@ -119,7 +127,7 @@ export function BankingTab({
             onChange={handleChange}
             min="0"
             step="0.01"
-            className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 text-slate-700"
+            className="w-full px-4 py-2 border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200"
             disabled={loading}
           />
         </div>
@@ -133,7 +141,7 @@ export function BankingTab({
             name="period"
             value={formData.period}
             onChange={handleChange}
-            className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 text-slate-700 bg-white"
+            className="w-full px-4 py-2 border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800"
             disabled={loading}
           >
             <option value="2025">2025</option>
@@ -146,12 +154,12 @@ export function BankingTab({
         {/* Submit Button */}
         <button
           type="submit"
-          disabled={loading || !canBank}
-          className={`w-full px-6 py-3 rounded-lg font-semibold text-white transition-all ${
-            canBank
-              ? 'bg-emerald-600 hover:bg-emerald-700 cursor-pointer'
-              : 'bg-slate-300 cursor-not-allowed'
-          }`}
+        disabled={loading}
+         className={`w-full px-6 py-3 rounded-lg font-semibold text-white transition-all ${
+  !loading
+    ? 'bg-emerald-500 hover:bg-emerald-600 cursor-pointer'
+    : 'bg-slate-300 cursor-not-allowed dark:bg-slate-700'
+}`}
         >
           {loading ? 'Processing...' : 'Bank Surplus'}
         </button>
@@ -166,48 +174,42 @@ export function BankingTab({
 
       {/* Result Display */}
       {result && (
-        <div className="space-y-4 p-6 bg-emerald-50 border border-emerald-200 rounded-lg">
+        <div className="space-y-4 p-6 card">
           <h3 className="text-lg font-semibold text-emerald-900">Banking Result</h3>
           
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <p className="text-xs font-semibold text-emerald-700 uppercase tracking-wide">
+              <p className="text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wide">
                 Energy in Scope
               </p>
-              <p className="text-xl font-bold text-emerald-900 mt-1">
-                    {(result?.energyInScope ?? 0).toFixed(2)} MJ
-                  </p>
+              <p className="text-xl font-bold text-zinc-900 dark:text-zinc-50 mt-1">
+                {(result?.energyInScope ?? 0).toFixed(2)} MJ
+              </p>
             </div>
 
             <div>
-              <p className="text-xs font-semibold text-emerald-700 uppercase tracking-wide">
+              <p className="text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wide">
                 Amount Banked
               </p>
-              <p className="text-xl font-bold text-emerald-900 mt-1">
+              <p className="text-xl font-bold text-zinc-900 dark:text-zinc-50 mt-1">
                 {(result?.amountBanked ?? 0).toFixed(2)}
               </p>
             </div>
 
             <div>
-              <p className="text-xs font-semibold text-emerald-700 uppercase tracking-wide">
+              <p className="text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wide">
                 Compliance Balance
               </p>
-              <p
-                className={`text-xl font-bold mt-1 ${
-                  complianceBalance >= 0
-                    ? 'text-emerald-700'
-                    : 'text-red-600'
-                }`}
-              >
+              <p className={`text-xl font-bold mt-1 ${complianceBalance >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
                 {complianceBalance.toFixed(2)}
               </p>
             </div>
 
             <div>
-              <p className="text-xs font-semibold text-emerald-700 uppercase tracking-wide">
+              <p className="text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wide">
                 Status
               </p>
-              <p className="text-sm font-semibold text-emerald-900 mt-1">
+              <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-50 mt-1">
                 ✓ Success
               </p>
             </div>
@@ -216,7 +218,7 @@ export function BankingTab({
       )}
 
       {/* Capacity Warning */}
-      {!canBank && (
+      {result && !canBank && (
         <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
           <p className="text-sm font-medium text-yellow-800">
             ⚠️ Insufficient compliance balance to bank surplus. Set a baseline with

@@ -26,6 +26,7 @@ export class BankRepository implements IBankRepository {
       [routeId]
     );
     const total = result.rows[0]?.total;
-    return total ? parseFloat(total) : 0;
+    // Parse numeric field from PostgreSQL (pg driver returns NUMERIC as strings)
+    return total ? parseFloat(String(total)) : 0;
   }
 }

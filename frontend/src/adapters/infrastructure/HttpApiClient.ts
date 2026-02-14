@@ -25,6 +25,9 @@ export class HttpApiClient implements OutboundApiPort {
     options?: RequestInit
   ): Promise<T> {
     const url = `${this.baseUrl}${endpoint}`;
+    // eslint-disable-next-line no-console
+    console.debug('[HttpApiClient] Request:', { url, method: options?.method || 'GET', headers: options?.headers });
+
     const response = await fetch(url, {
       headers: {
         'Content-Type': 'application/json',
@@ -32,17 +35,36 @@ export class HttpApiClient implements OutboundApiPort {
       ...options,
     });
 
+    // eslint-disable-next-line no-console
+    console.debug('[HttpApiClient] Response status:', response.status, 'url:', url);
+
     if (!response.ok) {
       const error = await response.json().catch(() => ({ error: 'Unknown error' }));
+      // eslint-disable-next-line no-console
+      console.error('[HttpApiClient] HTTP error', response.status, ':', error);
       throw new Error(error.error || `HTTP ${response.status}`);
     }
 
-    return response.json() as Promise<T>;
+    const json = await response.json().catch(() => null);
+    // eslint-disable-next-line no-console
+    console.debug('[HttpApiClient] Response body:', json);
+    return json as T;
   }
 
   // Routes
   async getRoutes(): Promise<Route[]> {
-    return this.fetch<Route[]>('/routes');
+    // eslint-disable-next-line no-console
+    console.log('[HttpApiClient] Fetching routes from', this.baseUrl);
+    try {
+      const data = await this.fetch<Route[]>('/routes');
+      // eslint-disable-next-line no-console
+      console.log('[HttpApiClient] Routes fetched successfully:', data);
+      return data;
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.error('[HttpApiClient] Routes fetch failed:', err);
+      throw err;
+    }
   }
 
   async getRouteById(id: string): Promise<Route | null> {

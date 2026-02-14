@@ -14,11 +14,17 @@ export class RoutesController {
 
   async getAllRoutes(req: Request, res: Response): Promise<Response> {
     try {
+      // eslint-disable-next-line no-console
+      console.log('[RoutesController] GET /routes');
       const routes = await this.routeRepository.getAllRoutes();
+      // eslint-disable-next-line no-console
+      console.log('[RoutesController] Found', routes.length, 'routes:', routes);
       return res.status(200).json(routes);
     } catch (error) {
       const message =
         error instanceof Error ? error.message : 'Internal server error';
+      // eslint-disable-next-line no-console
+      console.error('[RoutesController] Database Fetch Error:', message, 'Stack:', error instanceof Error ? error.stack : error);
       return res.status(500).json({ error: message });
     }
   }

@@ -20,7 +20,7 @@ export class BankSurplusUseCase {
   /**
    * Execute the use case.
    * @param input - { routeId, fuelConsumption, actualIntensity, amountToBan, target?, period }
-   * @returns { success: boolean, message: string }
+   * @returns Complete BankingResult with camelCase properties
    */
   async execute(input: {
     routeId: string;
@@ -29,7 +29,13 @@ export class BankSurplusUseCase {
     amountToBan: number;
     target?: number;
     period: string;
-  }): Promise<{ success: boolean; message: string }> {
+  }): Promise<{
+    success: boolean;
+    message: string;
+    energyInScope?: number;
+    amountBanked?: number;
+    complianceBalance?: number;
+  }> {
     const {
       routeId,
       fuelConsumption,
@@ -76,6 +82,9 @@ export class BankSurplusUseCase {
     return {
       success: true,
       message: `Successfully banked ${amountToBan} with CB = ${cb}`,
+      energyInScope: fuelConsumption,
+      amountBanked: amountToBan,
+      complianceBalance: cb,
     };
   }
 }

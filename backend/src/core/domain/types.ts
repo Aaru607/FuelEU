@@ -6,6 +6,8 @@ export interface Route {
   destination: string;
   // optional metadata used by domain (km)
   distanceKm?: number;
+  // actual measured intensity in gCO2e/MJ from ship_compliance
+  actualIntensity?: number;
 }
 
 export interface ComplianceRecord {

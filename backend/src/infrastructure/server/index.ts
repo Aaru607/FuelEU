@@ -1,4 +1,5 @@
 import express, { Express, Request, Response } from 'express';
+import cors from 'cors';
 import { initializePool } from '../db/db';
 import {
   RoutesController,
@@ -14,6 +15,9 @@ import {
 
 export async function createApp(): Promise<Express> {
   const app = express();
+
+  // Enable CORS for local frontend during development
+  app.use(cors({ origin: 'http://localhost:5173' }));
 
   // Middleware
   app.use(express.json());

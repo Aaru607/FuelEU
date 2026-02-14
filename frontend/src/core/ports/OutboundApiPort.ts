@@ -8,6 +8,7 @@ export interface Route {
   origin: string;
   destination: string;
   distanceKm?: number;
+  actualIntensity?: number; // gCO2e/MJ
 }
 
 export interface ComplianceComparison {
@@ -40,10 +41,8 @@ export interface PoolAllocations {
 export interface CreatePoolPayload {
   poolId: string;
   poolName: string;
-  members: Array<{
-    recordId: string;
-    complianceBalance: number;
-  }>;
+  routeIds: string[];
+  period: string;
 }
 
 /**

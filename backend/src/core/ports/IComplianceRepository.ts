@@ -25,4 +25,15 @@ export interface IComplianceRepository {
     routeId: string,
     period: string
   ): Promise<number | null>;
+
+  /**
+   * Retrieve the full compliance record for a route in a given period.
+   * @param routeId - route identifier
+   * @param period - compliance period
+   * @returns Compliance record with fuel consumption and actual intensity, or null if not found
+   */
+  getComplianceRecord(
+    routeId: string,
+    period: string
+  ): Promise<{ fuelConsumption: number; actualIntensity: number } | null>;
 }

@@ -15,13 +15,18 @@ export class CalculateRouteComparisonUseCase {
   /**
    * Execute the use case.
    * @param input - { routeId, actualIntensity, baselineIntensity? }
-   * @returns { percentDifference, compliant }
+   * @returns { actualIntensity, baselineIntensity, percentDifference, compliant }
    */
   async execute(input: {
     routeId: string;
     actualIntensity: number;
     baselineIntensity?: number;
-  }): Promise<{ percentDifference: number; compliant: boolean }> {
+  }): Promise<{
+    actualIntensity: number;
+    baselineIntensity: number;
+    percentDifference: number;
+    compliant: boolean;
+  }> {
     const { routeId, actualIntensity, baselineIntensity } = input;
 
     // If baseline not provided, fetch from repository
@@ -42,6 +47,8 @@ export class CalculateRouteComparisonUseCase {
     const compliant = actualIntensity <= baseline;
 
     return {
+      actualIntensity,
+      baselineIntensity: baseline,
       percentDifference: pctDiff,
       compliant,
     };
